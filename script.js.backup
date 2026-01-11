@@ -1,0 +1,741 @@
+console.log("Lets play some music!");
+
+// ========================================
+// FETCH SONGS FROM SERVER
+// ========================================
+async function getsongs() {
+  const res = await fetch("./songs/");
+  const response = await res.text();
+  const div = document.createElement("div");
+  div.innerHTML = response;
+  const as = div.getElementsByTagName("a");
+  const songs = [];
+  
+  for (let i = 0; i < as.length; i++) {
+    const element = as[i];
+    if (element.href.endsWith(".mp3")) {
+      const href = element.getAttribute("href") || element.href;
+      const parts = decodeURIComponent(href).split(/[\\/]/);
+      const file = parts[parts.length - 1];
+      const nameWithoutExt = file.replace(/\.mp3$/i, "");
+      
+      // Parse artist and song name from filename
+      let artist = "Unknown Artist";
+      let songName = nameWithoutExt;
+      
+      if (nameWithoutExt.includes(" - ")) {
+        const splitParts = nameWithoutExt.split(" - ");
+        artist = splitParts[0].trim();
+        songName = splitParts.slice(1).join(" - ").trim();
+      }
+      
+      songs.push({ file, display: songName, artist });
+    }
+  }
+  return songs;
+}
+
+// ========================================
+// GLOBAL VARIABLES
+// ========================================
+const audio = new Audio();
+let currentPlayButton = null;
+let currentIndex = -1;
+let songsGlobal = [];
+const fileIndexMap = {};
+
+// Playbar control elements
+let pbTitle, pbArtist, pbTime, pbSeek, pbToggle, pbPrev, pbNext, pbVolume, pbHeart;
+
+// ========================================
+// UPDATE PLAY/PAUSE BUTTON UI
+// ========================================
+function updatePlayButton(button, isPlaying) {
+  if (!button) return;
+  button.textContent = isPlaying ? "Pause" : "Play";
+}
+
+// ========================================
+// UPDATE PLAYBAR INFO (SONG NAME & ARTIST)
+// ========================================
+function setPlaybar(song) {
+  if (!song) return;
+  if (pbTitle) pbTitle.textContent = song.display;
+  if (pbArtist) pbArtist.textContent = song.artist || "Unknown Artist";
+}
+
+// ========================================
+// FORMAT TIME (SECONDS TO MM:SS)
+// ========================================
+function formatTime(sec) {
+  if (!isFinite(sec)) return "0:00";
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+// ========================================
+// PLAY SONG AT SPECIFIC INDEX
+// ========================================
+function playIndex(index, button) {
+  if (!songsGlobal.length || index < 0 || index >= songsGlobal.length) return;
+  
+  // If clicking the same song, toggle play/pause
+  if (currentIndex === index) {
+    if (audio.paused) {
+      audio.play();
+      updatePlayButton(button, true);
+      if (pbToggle) pbToggle.innerHTML = '<img src="pause.svg" alt="Pause" width="20" height="20" />';
+    } else {
+      audio.pause();
+      updatePlayButton(button, false);
+      if (pbToggle) pbToggle.innerHTML = '<img src="play.svg" alt="Play" width="20" height="20" />';
+    }
+    return;
+  }
+  
+  // Update previous button UI
+  if (currentPlayButton && currentPlayButton !== button) {
+    updatePlayButton(currentPlayButton, false);
+  }
+  
+  // Load and play new song
+  currentIndex = index;
+  const song = songsGlobal[currentIndex];
+  audio.src = `songs/${song.file}`;
+  audio.play();
+  
+  currentPlayButton = button;
+  updatePlayButton(currentPlayButton, true);
+  setPlaybar(song);
+  
+  if (pbToggle) pbToggle.innerHTML = '<img src="pause.svg" alt="Pause" width="20" height="20" />';
+}
+
+// ========================================
+// PLAY PREVIOUS SONG
+// ========================================
+function playPrevious() {
+  if (currentIndex > 0) {
+    playIndex(currentIndex - 1, currentPlayButton);
+  }
+}
+
+// ========================================
+// PLAY NEXT SONG
+// ========================================
+function playNext() {
+  if (currentIndex < songsGlobal.length - 1) {
+    playIndex(currentIndex + 1, currentPlayButton);
+  }
+}
+
+// ========================================
+// FUNCTION TO RENDER LIBRARY BY ARTIST
+// ========================================
+function renderLibrary(songsToDisplay, filterArtist = null) {
+  const songUl = document.querySelector(".songlist ul");
+  songUl.innerHTML = "";
+  
+  // Group songs by artist
+  const artistGroups = {};
+  songsToDisplay.forEach(song => {
+    if (!artistGroups[song.artist]) {
+      artistGroups[song.artist] = [];
+    }
+    artistGroups[song.artist].push(song);
+  });
+  
+  // If filtering by a specific artist, show only that artist's songs expanded
+  if (filterArtist) {
+    const artist = filterArtist;
+    const artistSongs = artistGroups[artist];
+    
+    if (artistSongs) {
+      const artistContainer = document.createElement("li");
+      artistContainer.className = "artist-container expanded";
+      
+      const artistCard = document.createElement("div");
+      artistCard.className = "song-card artist-card";
+      artistCard.innerHTML = `<div class="song-left">
+        <img src="music.svg" alt="music icon" class="invert song-icon" />
+        <div class="song-info"><div class="song-name">${artist}</div></div>
+      </div><div class="expand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>`;
+      
+      const songsContainer = document.createElement("div");
+      songsContainer.className = "songs-container";
+      
+      artistSongs.forEach(song => {
+        const songCard = document.createElement("div");
+        songCard.className = "song-card song-item";
+        
+        const playBtn = document.createElement("button");
+        playBtn.className = "play-button";
+        playBtn.textContent = "Play";
+        
+        playBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          playIndex(fileIndexMap[song.file], playBtn);
+        });
+        
+        songCard.innerHTML = `<div class="song-left">
+          <img src="music.svg" alt="music icon" class="invert song-icon" />
+          <div class="song-info">
+            <div class="song-name">${song.display}</div>
+            <div class="artist-name">${song.artist}</div>
+          </div>
+        </div>`;
+        songCard.appendChild(playBtn);
+        songsContainer.appendChild(songCard);
+      });
+      
+      artistCard.addEventListener("click", () => {
+        artistContainer.classList.toggle("expanded");
+      });
+      
+      artistContainer.appendChild(artistCard);
+      artistContainer.appendChild(songsContainer);
+      songUl.appendChild(artistContainer);
+    }
+  } else {
+    // Show all artists
+    for (const artist in artistGroups) {
+      const artistSongs = artistGroups[artist];
+      
+      const artistContainer = document.createElement("li");
+      artistContainer.className = "artist-container";
+      
+      const artistCard = document.createElement("div");
+      artistCard.className = "song-card artist-card";
+      artistCard.innerHTML = `<div class="song-left">
+        <img src="music.svg" alt="music icon" class="invert song-icon" />
+        <div class="song-info"><div class="song-name">${artist}</div></div>
+      </div><div class="expand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>`;
+      
+      const songsContainer = document.createElement("div");
+      songsContainer.className = "songs-container";
+      
+      artistSongs.forEach(song => {
+        const songCard = document.createElement("div");
+        songCard.className = "song-card song-item";
+        
+        const playBtn = document.createElement("button");
+        playBtn.className = "play-button";
+        playBtn.textContent = "Play";
+        
+        playBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          playIndex(fileIndexMap[song.file], playBtn);
+        });
+        
+        songCard.innerHTML = `<div class="song-left">
+          <img src="music.svg" alt="music icon" class="invert song-icon" />
+          <div class="song-info">
+            <div class="song-name">${song.display}</div>
+            <div class="artist-name">${song.artist}</div>
+          </div>
+        </div>`;
+        songCard.appendChild(playBtn);
+        songsContainer.appendChild(songCard);
+      });
+      
+      artistCard.addEventListener("click", () => {
+        artistContainer.classList.toggle("expanded");
+      });
+      
+      artistContainer.appendChild(artistCard);
+      artistContainer.appendChild(songsContainer);
+      songUl.appendChild(artistContainer);
+    }
+  }
+}
+
+// ========================================
+// VOLUME CONTROL CLASS
+// ========================================
+class VolumeControl {
+  constructor() {
+    this.volumeSlider = document.querySelector('.volume-slider');
+    this.volumeIcon = document.querySelector('.volume-icon');
+    this.volumeContainer = document.querySelector('.volume');
+    this.audio = null;
+    this.previousVolume = 70;
+    
+    this.init();
+  }
+
+  init() {
+    if (!this.volumeSlider || !this.volumeIcon) {
+      console.error('Volume elements not found');
+      return;
+    }
+
+    // Ensure slider has an initial value
+    if (!this.volumeSlider.value) {
+      this.volumeSlider.value = this.previousVolume;
+    }
+
+    // Set initial volume
+    this.updateVolume(this.volumeSlider.value);
+    
+    // Add event listeners
+    this.volumeSlider.addEventListener('input', (e) => this.handleVolumeChange(e));
+    // Toggle mute on the whole volume container to ensure clicks are received
+    this.volumeContainer.addEventListener('click', () => this.toggleMute());
+    
+    // Update volume icon on slider change
+    this.volumeSlider.addEventListener('input', () => this.updateVolumeIcon());
+  }
+
+  setAudioElement(audioElement) {
+    this.audio = audioElement;
+    if (this.audio) {
+      this.audio.volume = this.volumeSlider.value / 100;
+    }
+  }
+
+  handleVolumeChange(e) {
+    const volume = e.target.value;
+    this.updateVolume(volume);
+  }
+
+  updateVolume(volume) {
+    const volumePercent = Number(volume);
+    
+    // Update slider background gradient (vertical orientation)
+    this.volumeSlider.style.background = `linear-gradient(to top, #1db954 0%, #1db954 ${volumePercent}%, #404040 ${volumePercent}%, #404040 100%)`;
+    
+    // Update audio volume if audio element is set
+    if (this.audio) {
+      this.audio.volume = volumePercent / 100;
+    }
+    
+    // Update volume icon
+    this.updateVolumeIcon(volume);
+    
+    // Store current volume (for unmute functionality)
+    if (volume > 0) {
+      this.previousVolume = volume;
+      this.volumeContainer.classList.remove('muted');
+    } else {
+      this.volumeContainer.classList.add('muted');
+    }
+  }
+
+  updateVolumeIcon(volume = null) {
+    // Keep existing icon; only manage muted state via class
+    // (No icon swap to avoid missing assets)
+  }
+
+  toggleMute() {
+    if (this.volumeSlider.value > 0) {
+      // Mute
+      this.previousVolume = this.volumeSlider.value;
+      this.volumeSlider.value = 0;
+      this.volumeContainer.classList.add('muted');
+    } else {
+      // Unmute
+      this.volumeSlider.value = this.previousVolume;
+      this.volumeContainer.classList.remove('muted');
+    }
+    
+    this.updateVolume(this.volumeSlider.value);
+  }
+
+  setVolume(volume) {
+    this.volumeSlider.value = Math.max(0, Math.min(100, volume));
+    this.updateVolume(this.volumeSlider.value);
+  }
+
+  getVolume() {
+    return this.volumeSlider.value;
+  }
+}
+
+// ========================================
+// MAIN INITIALIZATION FUNCTION
+// ========================================
+async function main() {
+  // Fetch all songs
+  const songs = await getsongs();
+  songsGlobal = songs;
+  songsGlobal.forEach((s, i) => { fileIndexMap[s.file] = i; });
+  
+  // Group songs by artist
+  const artistGroups = {};
+  songs.forEach(song => {
+    if (!artistGroups[song.artist]) {
+      artistGroups[song.artist] = [];
+    }
+    artistGroups[song.artist].push(song);
+  });
+  
+  // ========================================
+  // PLAYBAR CONTROLS SETUP
+  // ========================================
+  pbTitle = document.querySelector(".playbar .song-name");
+  pbArtist = document.querySelector(".playbar .artist-name");
+  pbTime = document.querySelector(".songtime");
+  pbSeek = document.querySelector(".seekbar");
+  const circle = document.querySelector(".circle");
+  const progress = document.querySelector(".progress");
+  pbToggle = document.querySelector(".playpause");
+  pbPrev = document.querySelector(".previous");
+  pbNext = document.querySelector(".next");
+  pbVolume = document.querySelector(".volume");
+  pbHeart = document.querySelector(".heart");
+  
+  // ========================================
+  // AUDIO TIME UPDATE (UPDATE SEEKBAR & TIME)
+  // ========================================
+  audio.addEventListener("timeupdate", () => {
+    const percent = (audio.currentTime / audio.duration) * 100;
+    pbTime.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    if (circle) circle.style.left = percent + "%";
+    if (progress) progress.style.width = percent + "%";
+  });
+  
+  // ========================================
+  // SEEKBAR CLICK TO SEEK
+  // ========================================
+  pbSeek.addEventListener("click", e => {
+    let percent = (e.offsetX / e.currentTarget.getBoundingClientRect().width) * 100;
+    circle.style.left = percent + "%";
+    progress.style.width = percent + "%";
+    audio.currentTime = (audio.duration * percent) / 100;
+  });
+  
+  // ========================================
+  // PLAYBAR PLAY/PAUSE TOGGLE
+  // ========================================
+  if (pbToggle) {
+    pbToggle.addEventListener("click", () => {
+      // If no song has been selected yet, start with the first song
+      if (currentIndex === -1 && songsGlobal.length) {
+        const firstButton = document.querySelector(".songlist .play-button");
+        playIndex(0, firstButton);
+        return;
+      }
+
+      if (audio.paused) {
+        audio.play();
+        pbToggle.innerHTML = '<img src="pause.svg" alt="Pause" width="20" height="20" />';
+        if (currentPlayButton) updatePlayButton(currentPlayButton, true);
+      } else {
+        audio.pause();
+        pbToggle.innerHTML = '<img src="play.svg" alt="Play" width="20" height="20" />';
+        if (currentPlayButton) updatePlayButton(currentPlayButton, false);
+      }
+    });
+  }
+  
+  // ========================================
+  // PREVIOUS BUTTON
+  // ========================================
+  if (pbPrev) {
+    pbPrev.addEventListener("click", playPrevious);
+  }
+  
+  // ========================================
+  // NEXT BUTTON
+  // ========================================
+  if (pbNext) {
+    pbNext.addEventListener("click", playNext);
+  }
+  
+  // ========================================
+  // AUTO PLAY NEXT SONG WHEN CURRENT ENDS
+  // ========================================
+  audio.addEventListener("ended", () => {
+    playNext();
+  });
+  
+  // ========================================
+  // VOLUME CONTROL - Initialize after defining elements
+  // ========================================
+  const volumeControl = new VolumeControl();
+  volumeControl.setAudioElement(audio);
+  window.volumeControl = volumeControl;
+  
+  // ========================================
+  // HEART/FAVORITE TOGGLE
+  constructor() {
+    this.volumeSlider = document.querySelector('.volume-slider');
+    this.volumeIcon = document.querySelector('.volume-icon');
+    this.volumeContainer = document.querySelector('.volume');
+    this.audio = null; // Will be set to your audio element
+    this.previousVolume = 70;
+    
+    this.init();
+  }
+
+  init() {
+    if (!this.volumeSlider || !this.volumeIcon) {
+      console.error('Volume elements not found');
+      return;
+    }
+
+    // Ensure slider has an initial value
+    if (!this.volumeSlider.value) {
+      this.volumeSlider.value = this.previousVolume;
+    }
+
+    // Set initial volume
+    this.updateVolume(this.volumeSlider.value);
+    
+    // Add event listeners
+    this.volumeSlider.addEventListener('input', (e) => this.handleVolumeChange(e));
+    // Toggle mute on the whole volume container to ensure clicks are received
+    this.volumeContainer.addEventListener('click', () => this.toggleMute());
+    
+    // Update volume icon on slider change
+    this.volumeSlider.addEventListener('input', () => this.updateVolumeIcon());
+  }
+
+  // Set the audio element (call this method with your audio element)
+  setAudioElement(audioElement) {
+    this.audio = audioElement;
+    if (this.audio) {
+      this.audio.volume = this.volumeSlider.value / 100;
+    }
+  }
+
+  handleVolumeChange(e) {
+    const volume = e.target.value;
+    this.updateVolume(volume);
+  }
+
+  updateVolume(volume) {
+    const volumePercent = volume;
+    
+    // Update slider background gradient (vertical orientation)
+    this.volumeSlider.style.background = `linear-gradient(to top, #1db954 0%, #1db954 ${volumePercent}%, #404040 ${volumePercent}%, #404040 100%)`;
+    
+    // Update audio volume if audio element is set
+    if (this.audio) {
+      this.audio.volume = Number(volume) / 100;
+    }
+    
+    // Update volume icon
+    this.updateVolumeIcon(volume);
+    
+    // Store current volume (for unmute functionality)
+    if (volume > 0) {
+      this.previousVolume = volume;
+      this.volumeContainer.classList.remove('muted');
+    } else {
+      this.volumeContainer.classList.add('muted');
+    }
+  }
+
+  updateVolumeIcon(volume = null) {
+    // Keep existing icon; only manage muted state via class
+    // (No icon swap to avoid missing assets)
+  }
+
+  toggleMute() {
+    if (this.volumeSlider.value > 0) {
+      // Mute
+      this.previousVolume = this.volumeSlider.value;
+      this.volumeSlider.value = 0;
+      this.volumeContainer.classList.add('muted');
+    } else {
+      // Unmute
+      this.volumeSlider.value = this.previousVolume;
+      this.volumeContainer.classList.remove('muted');
+    }
+    
+    this.updateVolume(this.volumeSlider.value);
+  }
+
+  // Public method to set volume programmatically
+  setVolume(volume) {
+    this.volumeSlider.value = Math.max(0, Math.min(100, volume));
+    this.updateVolume(this.volumeSlider.value);
+  }
+
+  // Public method to get current volume
+  getVolume() {
+    return this.volumeSlider.value;
+  }
+}
+
+// Initialize volume control when DOM is ready
+// Initialize volume control within main() after DOM is ready
+  
+  // ========================================
+  // HEART/FAVORITE TOGGLE
+  // ========================================
+  if (pbHeart) {
+    pbHeart.addEventListener("click", () => {
+      pbHeart.classList.toggle("liked");
+    });
+  }
+  
+  // ========================================
+  // BUILD SONG LIST UI - INITIAL LOAD (ALL ARTISTS)
+  // ========================================
+  renderLibrary(songsGlobal);
+  
+  // ========================================
+  // ADD CLICK HANDLERS TO CARDS IN SPOTLIGHT PLAYLISTS
+  // ========================================
+  const cards = document.querySelectorAll(".card");
+  cards.forEach(card => {
+    card.addEventListener("click", (e) => {
+      // Find the artist name from the card
+      // For now, we'll use the card index to map to artists, or extract from card content
+      const cardTitle = card.querySelector("h2");
+      if (cardTitle) {
+        const artists = Object.keys(artistGroups);
+        // Try to find artist with matching name, otherwise just use first artist
+        let targetArtist = artists[0];
+        
+        // For demo cards, we can use the first artist or based on card order
+        const cardIndex = Array.from(cards).indexOf(card);
+        if (cardIndex < artists.length) {
+          targetArtist = artists[cardIndex];
+        }
+        
+        // Filter library to show only this artist's songs
+        renderLibrary(songsGlobal, targetArtist);
+      }
+    });
+    
+    // Add hover effect
+    card.style.cursor = "pointer";
+    card.addEventListener("mouseenter", () => {
+      card.style.transform = "scale(1.05)";
+      card.style.transition = "transform 0.2s ease";
+    });
+    
+    card.addEventListener("mouseleave", () => {
+      card.style.transform = "scale(1)";
+    });
+  });
+}
+
+// ========================================
+// START THE APP
+// ========================================
+main();
+
+// =============================
+// Mobile sidebar (hamburger)
+// =============================
+(function setupMobileSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const hamburger = document.querySelector(".hamburger-btn");
+  const closeBtn = document.querySelector(".close-btn");
+  const backdrop = document.querySelector(".backdrop");
+  const BREAKPOINT = 768;
+
+  if (!sidebar || !hamburger || !backdrop) return;
+
+  function openSidebar() {
+    sidebar.classList.add("open");
+    document.body.classList.add("no-scroll");
+    backdrop.classList.add("show");
+    hamburger.setAttribute("aria-expanded", "true");
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove("open");
+    document.body.classList.remove("no-scroll");
+    backdrop.classList.remove("show");
+    hamburger.setAttribute("aria-expanded", "false");
+  }
+
+  hamburger.addEventListener("click", () => {
+    const isOpen = sidebar.classList.contains("open");
+    if (isOpen) closeSidebar(); else openSidebar();
+  });
+
+  if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+  backdrop.addEventListener("click", closeSidebar);
+
+  // Close on ESC
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSidebar();
+  });
+
+  // Auto-close if resizing to desktop
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > BREAKPOINT) closeSidebar();
+  });
+
+  // Close when clicking a link in the sidebar (mobile)
+  sidebar.addEventListener("click", (e) => {
+    const target = e.target;
+    if (target.closest && target.closest("a")) closeSidebar();
+  });
+})();
+
+// // Volume Control Functionality
+// const volumeSlider = document.querySelector('.volume-slider');
+// const volumeIcon = document.querySelector('.volume-icon');
+
+// // Update volume icon based on volume level
+// function updateVolumeIcon() {
+//   const volume = volumeSlider.value;
+//   if (volume == 0) {
+//     volumeIcon.src = 'volume2.svg';
+//     volumeIcon.alt = 'Muted';
+//   } else {
+//     volumeIcon.src = 'volume.svg';
+//     volumeIcon.alt = 'Volume';
+//   }
+// }
+
+// // Update slider background gradient (vertical)
+// function updateSliderBackground() {
+//   const volume = volumeSlider.value;
+//   const percentage = volume;
+//   volumeSlider.style.background = `linear-gradient(to top, #1db954 0%, #1db954 ${percentage}%, #404040 ${percentage}%, #404040 100%)`;
+// }
+
+// // Handle volume slider input
+// volumeSlider.addEventListener('input', (e) => {
+//   const volume = e.target.value;
+  
+//   // Update icon
+//   updateVolumeIcon();
+  
+//   // Update slider background
+//   updateSliderBackground();
+  
+//   // If you have an audio element, set its volume
+//   // Example: audioElement.volume = volume / 100;
+  
+//   console.log('Volume set to:', volume);
+// });
+
+// // Handle volume icon click to mute/unmute
+// const volumeContainer = document.querySelector('.volume');
+// let previousVolume = 70;
+
+// volumeIcon.addEventListener('click', (e) => {
+//   e.stopPropagation();
+  
+//   if (volumeSlider.value > 0) {
+//     // Mute
+//     previousVolume = volumeSlider.value;
+//     volumeSlider.value = 0;
+//   } else {
+//     // Unmute
+//     volumeSlider.value = previousVolume;
+//   }
+  
+//   updateVolumeIcon();
+//   updateSliderBackground();
+// });
+
+// Initialize on page load (handled inside VolumeControl)

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify - Web Player: Music for everyone</title>
+    <link rel="icon" type="image/png" href="favicon.ico?v=1" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="utility.css" />
+  </head>
+  <body>
+    <div class="container flex bg-black">
+      <div class="left" id="sidebar">
+        <button
+          class="close-btn"
+          aria-label="Close menu"
+          aria-controls="sidebar"
+          aria-expanded="true"
+        ></button>
+        <div class="home bg-grey rounded m1 p1">
+          <div class="logo">
+            <img width="115" class="invert" src="logo.svg" alt="" />
+          </div>
+          <ul>
+            <li><img class="invert" src="home.svg" alt="Home" />Home</li>
+            <li><img class="invert" src="search.svg" alt="Search" />Search</li>
+          </ul>
+        </div>
+
+        <div class="library bg-grey rounded m1 p1">
+          <div class="heading">
+            <img class="invert" src="playlist.svg" alt="" />
+            <h2>Your library</h2>
+          </div>
+
+          <div class="songlist">
+            <ul></ul>
+          </div>
+          <div class="footer">
+            <div>
+              <a href="https://www.spotify.com/jp/legal/">
+                <span>Legal</span></a>
+            </div>
+            <div>
+              <a href="https://www.spotify.com/jp/privacy/"
+                ><span>Privacy Center</span></a>
+            </div>
+            <div>
+              <a href="https://www.spotify.com/jp/legal/privacy-policy/"
+                ><span>Privacy Policy</span></a>
+            </div>
+            <div>
+              <a href="https://www.spotify.com/jp/legal/cookies-policy/"
+                ><span>Cookies</span></a
+              >
+            </div>
+            <div>
+              <a href="https://www.spotify.com/jp/legal/privacy-policy/#s3"
+                ><span>About Ads</span></a>
+            </div>
+            <div>
+              <a href="https://www.spotify.com/jp/accessibility/"
+                ><span>Accessibility</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="right rounded p1">
+        <div class="header bg-grey rounded p1 m1">
+          <div class="nav">
+            <button
+              class="hamburger-btn"
+              aria-label="Open menu"
+              aria-controls="sidebar"
+              aria-expanded="false"
+              >
+              <img
+                src="hamburger.svg"
+                alt="Menu"
+                class="invert"
+                width="24"
+                height="24"/>
+            </button>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M15 6L9.70711 11.2929C9.37377 11.6262 9.20711 11.7929 9.20711 12C9.20711 12.2071 9.37377 12.3738 9.70711 12.7071L15 18"
+                stroke="#ffffff"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M9 18L14.2929 12.7071C14.6262 12.3738 14.7929 12.2071 14.7929 12C14.7929 11.7929 14.6262 11.6262 14.2929 11.2929L9 6"
+                stroke="#ffffff"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <div class="buttons">
+            <button class="signupBtn">Sign up</button>
+            <button class="loginBtn">Log in</button>
+          </div>
+        </div>
+        <div class="spotifyPlaylists rounded m1 p1 bg-grey">
+          <h1>Spotify Playlists</h1>
+          <div class="cardcontainer">
+            <div class="card" data-artist="Arijit Singh">
+              <div class="play">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  color="currentColor"
+                  fill="none">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#141B34"
+                    stroke-width="1.5"/>
+                  <path
+                    d="M9.5 11.1998V12.8002C9.5 14.3195 9.5 15.0791 9.95576 15.3862C10.4115 15.6932 11.0348 15.3535 12.2815 14.6741L13.7497 13.8738C15.2499 13.0562 16 12.6474 16 12C16 11.3526 15.2499 10.9438 13.7497 10.1262L12.2815 9.32594C11.0348 8.6465 10.4115 8.30678 9.95576 8.61382C9.5 8.92086 9.5 9.6805 9.5 11.1998Z"
+                  />
+                </svg>
+              </div>
+              <img src="artist/Arjit.jpg" alt="Arijit Singh" />
+              <h2>Arijit Singh</h2>
+              <p>Soothing voice, heartfelt melodies.</p>
+            </div>
+            <div class="card" data-artist="Karan Aujla">
+              <div class="play">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  color="currentColor"
+                  fill="none">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#141B34"
+                    stroke-width="1.5"/>
+                  <path
+                    d="M9.5 11.1998V12.8002C9.5 14.3195 9.5 15.0791 9.95576 15.3862C10.4115 15.6932 11.0348 15.3535 12.2815 14.6741L13.7497 13.8738C15.2499 13.0562 16 12.6474 16 12C16 11.3526 15.2499 10.9438 13.7497 10.1262L12.2815 9.32594C11.0348 8.6465 10.4115 8.30678 9.95576 8.61382C9.5 8.92086 9.5 9.6805 9.5 11.1998Z"
+                    fill="#141B34"
+                  />
+                </svg>
+              </div>
+              <img src="artist/Karan%20Aujla.jpg" alt="Karan Aujla" />
+              <h2>Karan Aujla</h2>
+              <p>Punjabi bangers and hooks.</p>
+            </div>
+            <div class="card" data-artist="Talwiinder">
+              <div class="play">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  color="currentColor"
+                  fill="none">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#141B34"
+                    stroke-width="1.5"/>
+                  <path
+                    d="M9.5 11.1998V12.8002C9.5 14.3195 9.5 15.0791 9.95576 15.3862C10.4115 15.6932 11.0348 15.3535 12.2815 14.6741L13.7497 13.8738C15.2499 13.0562 16 12.6474 16 12C16 11.3526 15.2499 10.9438 13.7497 10.1262L12.2815 9.32594C11.0348 8.6465 10.4115 8.30678 9.95576 8.61382C9.5 8.92086 9.5 9.6805 9.5 11.1998Z"
+                  />
+                </svg>
+              </div>
+              <img src="artist/Talwiinder.jpg" alt="Talwiinder" />
+              <h2>Talwiinder</h2>
+              <p>Chill Punjabi pop vibes.</p>
+            </div>
+            <div class="card" data-artist="Taylor Swift">
+              <div class="play">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  color="currentColor"
+                  fill="none">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#141B34"
+                    stroke-width="1.5"/>
+                  <path
+                    d="M9.5 11.1998V12.8002C9.5 14.3195 9.5 15.0791 9.95576 15.3862C10.4115 15.6932 11.0348 15.3535 12.2815 14.6741L13.7497 13.8738C15.2499 13.0562 16 12.6474 16 12C16 11.3526 15.2499 10.9438 13.7497 10.1262L12.2815 9.32594C11.0348 8.6465 10.4115 8.30678 9.95576 8.61382C9.5 8.92086 9.5 9.6805 9.5 11.1998Z"/>
+                </svg>
+              </div>
+              <img src="artist/Taylor%20Swift.jpg" alt="Taylor Swift" />
+              <h2>Taylor Swift</h2>
+              <p>Stories in every song.</p>
+            </div>
+            <div class="card" data-artist="Favourite">
+              <div class="play">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  color="currentColor"
+                  fill="none">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#141B34"
+                    stroke-width="1.5"/>
+                  <path
+                    d="M9.5 11.1998V12.8002C9.5 14.3195 9.5 15.0791 9.95576 15.3862C10.4115 15.6932 11.0348 15.3535 12.2815 14.6741L13.7497 13.8738C15.2499 13.0562 16 12.6474 16 12C16 11.3526 15.2499 10.9438 13.7497 10.1262L12.2815 9.32594C11.0348 8.6465 10.4115 8.30678 9.95576 8.61382C9.5 8.92086 9.5 9.6805 9.5 11.1998Z"
+                    fill="#141B34"
+                  />
+                </svg>
+              </div>
+              <img src="artist/Favourite.jpg" alt="Favourite" />
+              <h2>Favourite</h2>
+              <p>Punjabi bangers and hooks.</p>
+            </div>
+            <div class="card" data-artist="The Weeknd">
+              <div class="play">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  color="currentColor"
+                  fill="none">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#141B34"
+                    stroke-width="1.5"/>
+                  <path
+                    d="M9.5 11.1998V12.8002C9.5 14.3195 9.5 15.0791 9.95576 15.3862C10.4115 15.6932 11.0348 15.3535 12.2815 14.6741L13.7497 13.8738C15.2499 13.0562 16 12.6474 16 12C16 11.3526 15.2499 10.9438 13.7497 10.1262L12.2815 9.32594C11.0348 8.6465 10.4115 8.30678 9.95576 8.61382C9.5 8.92086 9.5 9.6805 9.5 11.1998Z"
+                  />
+                </svg>
+              </div>
+              <img src="artist/The%20Weeknd.jpg" alt="The Weeknd" />
+              <h2>The Weeknd</h2>
+              <p>Late-night synth and R&B.</p>
+            </div>
+          </div>
+          
+          <!-- Audio Element (Hidden) -->
+          <audio id="audioPlayer" src="your-song.mp3"></audio>
+          <div class="playbar">
+            <div class="left-playbar">
+              <img src="music.svg" alt="Album Art" class="album-art invert" />
+              <div class="songinfo">
+                <div class="song-name">Song Name</div>
+                <div class="artist-name">Artist Name</div>
+              </div>
+            </div>
+            <div class="center-playbar">
+              <div class="songbuttons">
+                <button
+                  class="previous icon-btn"
+                  type="button"
+                  aria-label="Previous track">
+                  <img src="prevsong.svg" alt="" width="20" height="20" />
+                </button>
+                <button
+                  class="playpause icon-btn"
+                  type="button"
+                  aria-label="Play or pause">
+                  <img src="play.svg" alt="" width="20" height="20" />
+                </button>
+                <button
+                  class="next icon-btn"
+                  type="button"
+                  aria-label="Next track">
+                  <img src="nextsong.svg" alt="" width="20" height="20" />
+                </button>
+              </div>
+              <div class="seekbar-container">
+                <span class="songtime">0:00 / 0:00</span>
+                <div class="seekbar">
+                  <div class="progress"></div>
+                  <div class="circle"></div>
+                </div>
+              </div>
+            </div>
+            <div class="right-playbar">
+              <button
+                class="heart icon-btn"
+                type="button"
+                aria-label="Add to favorites">
+                <img src="heart.svg" alt="" width="20" height="20" />
+              </button>
+              <div class="volume">
+                <div class="icon-btn">
+                  <img
+                    class="volume-icon"
+                    src="volume.svg"
+                    alt=""
+                    width="20"
+                    height="20"/>
+                </div>
+                <input
+                  type="range"
+                  class="volume-slider"
+                  min="0"
+                  max="100"
+                  value="70"
+                  aria-label="Volume control"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="backdrop" aria-hidden="true"></div>
+    <script src="script.js"></script>
+  </body>
+</html>
